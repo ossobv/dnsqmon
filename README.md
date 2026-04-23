@@ -100,3 +100,19 @@ Then tail:
     Advantage: no big log batches, and immediate output for single queries.
     Disadvantage: twice the output (count=1), unless we can be smart about
     dumping when flushing.
+
+## Contributing
+
+Per the Linux kernel guidelines, we suggest the following attribution for AI
+assisted commits:
+
+    Assisted-by: AGENT_NAME:MODEL_VERSION [TOOL1] [TOOL2]
+
+_(TOOL1, TOOL2 are optional specialized analysis tools used (e.g., coccinelle,
+sparse, smatch, clang-tidy).)_
+
+Example:
+
+    Assisted-by: Claude:claude-opus-4-7
+
+See also: <https://github.com/torvalds/linux/blob/master/Documentation/process/coding-assistants.rst>
