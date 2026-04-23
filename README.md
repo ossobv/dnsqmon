@@ -79,3 +79,24 @@ Then tail:
   packets and another to aggregate, connected by a channel.
 - Flush interval might be delayed by 1-2 seconds, because we use efficient
   kernel buffering.
+- A single lookup might look like 4 queries, for instance when both A and AAAA
+  are qierues up *and* NAT-translation is performed on the host:
+  - `{"src_ip":"POD_IP","qname":"example.com","qtype":"A","count":1,...}`
+  - `{"src_ip":"NODE_IP","qname":"example.com","qtype":"A","count":1,...}`
+  - `{"src_ip":"POD_IP","qname":"example.com","qtype":"AAAA","count":1,...}`
+  - `{"src_ip":"NODE_IP","qname":"example.com","qtype":"AAAA","count":1,...}`
+  This is not a bug.
+- Right now, we dump a big batch of data every flush-period. We might instead
+  opt to do the following:
+  - When a query arrives we dump it immediately and then store it in a hashmap.
+  - When another query with the same (src,qname,qtype) tuple arrives, it is
+    only added to the map and not printed.
+  - After flush-period for that particular record, the totals are printed and
+    the map is cleared of that record. This would result in:
+    - t=0  example.com, count=1
+    - t=60 example.com, count=59
+    - t=61 example.com, count=1
+    - t=120 example.com, count=59
+    Advantage: no big log batches, and immediate output for single queries.
+    Disadvantage: twice the output (count=1), unless we can be smart about
+    dumping when flushing.
