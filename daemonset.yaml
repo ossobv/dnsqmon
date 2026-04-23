@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: dnsqmon
+  namespace: kube-system
+  labels:
+    app: dnsqmon
+spec:
+  selector:
+    matchLabels:
+      app: dnsqmon
+  template:
+    metadata:
+      labels:
+        app: dnsqmon
+    spec:
+      # hostNetwork is required so we see the node's real interfaces
+      # (cilium_*, lxc*, veth*, eth0) rather than a pod netns.
+      hostNetwork: true
+      # Schedule on all nodes including control plane; adjust as needed.
+      tolerations:
+        - operator: Exists
+      containers:
+        - name: dnsqmon
+          image: your-registry/dnsqmon:0.1.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - "-i"
+            - "any"
+            - "-p"
+            - "53"
+            - "-f"
+            - "300"
+          securityContext:
+            # NET_RAW for packet capture, NET_ADMIN for promisc/BPF.
+            capabilities:
+              add: ["NET_RAW", "NET_ADMIN"]
+              drop: ["ALL"]
+            readOnlyRootFilesystem: true
+            runAsNonRoot: false  # libpcap needs root + caps; this is the minimum
+            runAsUser: 0
+          resources:
+            requests:
+              cpu: "10m"
+              memory: "16Mi"
+            limits:
+              cpu: "200m"
+              memory: "64Mi"
