@@ -2,7 +2,7 @@
 set -e
 set -x
 here=$(cd "$(dirname "$0")"; pwd)
-gitversion=$(git describe --always --dirty=+modified)
+gitversion=$(git describe --always --dirty=+modified | sed -e 's/-/+/')
 version=$(echo "$gitversion" | sed -e 's/[^A-Za-z0-9.-]\+/_/g')
 sudo docker build --build-arg="GIT_VERSION=$gitversion" --progress=plain -t "build-dnsqmon:$version" "$here"
 tmp=$(mktemp -d)
